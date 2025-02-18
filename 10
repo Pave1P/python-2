@@ -1,0 +1,27 @@
+def find_min_drops(floors=100):
+    x = 14  # Оптимальный начальный шаг
+    floor = 0
+    attempts = 0
+    
+    # Бросаем первое яйцо
+    while floor + x <= floors:
+        floor += x
+        attempts += 1
+        print(f"Бросаем первое яйцо с {floor}-го этажа")
+        if input("Яйцо разбилось? (y/n): ") == "y":
+            floor -= x
+            break
+        x -= 1
+    
+    # Бросаем второе яйцо
+    for i in range(floor + 1, floor + x + 1):
+        attempts += 1
+        print(f"Бросаем второе яйцо с {i}-го этажа")
+        if input("Яйцо разбилось? (y/n): ") == "y":
+            print(f"N найден: {i-1}-й этаж, число бросков: {attempts}")
+            return i - 1
+    
+    print(f"N найден: {floors}-й этаж, число бросков: {attempts}")
+    return floors
+
+find_min_drops()
