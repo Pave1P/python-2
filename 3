@@ -1,61 +1,38 @@
-def find_critical_floor(max_floor, eggs, critical_floor):
-    """
-    Функция для нахождения критического этажа в здании с заданным количеством этажей и яиц.
+def compute_transition_function(pattern, alphabet):
+    """Создает таблицу переходов конечного автомата"""
+    m = len(pattern)
+    transition = [{ch: 0 for ch in alphabet} for _ in range(m + 1)]
+
+    for state in range(m + 1):
+        for ch in alphabet:
+            # Определяем следующее состояние
+            prefix = pattern[:state] + ch
+            next_state = 0
+            for i in range(min(m, state + 1), 0, -1):
+                if pattern[:i] == prefix[-i:]:
+                    next_state = i
+                    break
+            transition[state][ch] = next_state
+    return transition
+
+def finite_automaton_search(text, pattern):
+    """Поиск подстроки в тексте с использованием конечного автомата"""
+    alphabet = set(text)  # Определяем алфавит из текста
+    transition = compute_transition_function(pattern, alphabet)
     
-    :param max_floor: Количество этажей в здании (в данной задаче 100).
-    :param eggs: Количество яиц (в данной задаче 2).
-    :param critical_floor: Этаж, на котором яйцо разбивается.
-    :return: Критический этаж N и количество бросков.
-    """
-    # Начальный шаг определяется как минимальное k, при котором сумма k + (k-1) + ... + 1 >= max_floor
-    # Это можно вычислить по формуле суммы арифметической прогрессии: k*(k+1)/2 >= max_floor
-    k = 1
-    while k * (k + 1) // 2 < max_floor:
-        k += 1
+    m = len(pattern)
+    state = 0
+    result = []
 
-    # Инициализация переменных
-    current_floor = k  # Текущий этаж, с которого бросаем яйцо
-    step = k - 1  # Шаг уменьшается на 1 после каждого броска
-    throws = 0  # Счетчик бросков
+    for i, ch in enumerate(text):
+        state = transition[state].get(ch, 0)  # Переход в следующее состояние
+        if state == m:
+            result.append(i - m + 1)  # Нашли вхождение шаблона
 
-    # Первая фаза: бросаем первое яйцо с текущего этажа
-    while eggs > 1 and current_floor <= max_floor:
-        throws += 1
-        print(f"Бросок {throws}: бросаем яйцо с {current_floor}-го этажа.")
-
-        # Проверяем, разбилось ли яйцо
-        if current_floor >= critical_floor:
-            print("Яйцо разбилось!")
-            eggs -= 1  # Уменьшаем количество яиц
-            break  # Переходим ко второй фазе
-
-        # Если яйцо не разбилось, поднимаемся на следующий этаж с уменьшенным шагом
-        current_floor += step
-        step -= 1
-
-    # Вторая фаза: используем второе яйцо для линейного поиска
-    # Начинаем с последнего успешного этажа + 1 и проверяем каждый этаж до текущего
-    start_floor = current_floor - step if step > 0 else 1
-    for floor in range(start_floor, current_floor + 1):
-        throws += 1
-        print(f"Бросок {throws}: бросаем второе яйцо с {floor}-го этажа.")
-
-        # Проверяем, разбилось ли яйцо
-        if floor >= critical_floor:
-            print("Яйцо разбилось!")
-            return floor, throws
-
-    return max_floor, throws
-
-
-# Пример использования
-max_floor = 100
-eggs = 2
-critical_floor_input = 68  # Задаем этаж, на котором яйцо разбивается
-found_floor, throws = find_critical_floor(max_floor, eggs, critical_floor_input)
-print(f"Критический этаж: {found_floor}, количество бросков: {throws}")
     return result
+
 # Пример использования
-text = "ababcababac"
-pattern = "ababac"
-print(finite_automaton_matcher(text, pattern))  # Output: [5]
+text = "ababcabcabababd"
+pattern = "ababd"
+positions = finite_automaton_search(text, pattern)
+print("Образец найден в позициях:", positions)
