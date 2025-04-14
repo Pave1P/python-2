@@ -1,0 +1,58 @@
+import itertools
+
+def area(a, b, c):
+    """Вычисляет площадь треугольника по трём точкам."""
+    return abs((a[0] * (b[1] - c[1]) + b[0] * (c[1] - a[1]) + c[0] * (a[1] - b[1])) / 2.0)
+
+def is_point_inside_triangle(p, a, b, c):
+    """Проверяет, лежит ли точка p строго внутри треугольника abc (не на границе)."""
+    abc = area(a, b, c)
+    if abc < 1e-9:
+        return False  # Вырожденный треугольник
+    pab = area(p, a, b)
+    pac = area(p, a, c)
+    pbc = area(p, b, c)
+
+    # Точка лежит строго внутри, если все три площади > 0 и их сумма равна площади abc
+    return (pab > 1e-9 and pac > 1e-9 and pbc > 1e-9 and abs(abc - (pab + pac + pbc)) < 1e-9)
+
+def has_nested_triangles(points):
+    """Проверяет, есть ли в множестве точек вложенные треугольники."""
+    n = len(points)
+    if n < 6:
+        return False  # Нужно минимум 6 точек для двух треугольников
+    # Генерируем все возможные тройки точек и фильтруем вырожденные
+    triangles = [tri for tri in itertools.combinations(points, 3) if area(*tri) > 1e-9]
+    for i in range(len(triangles)):
+        a, b, c = triangles[i]
+        for j in range(len(triangles)):
+            if i == j:
+                continue
+            d, e, f = triangles[j]
+            # Проверяем, лежат ли все точки DEF строго внутри ABC
+            def_in_abc = (is_point_inside_triangle(d, a, b, c) and
+                          is_point_inside_triangle(e, a, b, c) and
+                          is_point_inside_triangle(f, a, b, c))
+
+            # Проверяем, лежат ли все точки ABC строго внутри DEF
+            abc_in_def = (is_point_inside_triangle(a, d, e, f) and
+                          is_point_inside_triangle(b, d, e, f) and
+                          is_point_inside_triangle(c, d, e, f))
+            if def_in_abc or abc_in_def:
+                return True
+    return False
+
+
+# Примеры использования
+if __name__ == "__main__":
+    # Пример 1: Есть вложенные треугольники
+    points1 = [(0, 0), (4, 0), (2, 4), (1, 1), (2, 2), (3, 1)]
+    print(has_nested_triangles(points1))  # Ожидаем True (например, (1,1)-(2,2)-(3,1) внутри (0,0)-(4,0)-(2,4))
+
+    # Пример 2: Нет вложенных треугольников
+    points2 = [(0, 0), (1, 0), (0, 1), (2, 2), (3, 3), (4, 4)]
+    print(has_nested_triangles(points2))  # Ожидаем False
+
+    # Пример 3: Все точки на одной прямой (нет треугольников)
+    points3 = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)]
+    print(has_nested_triangles(points3))  # Ожидаем False
